@@ -22,7 +22,7 @@ pipeline {
     stages {
         stage('Build all microservices') {
             steps {
-                sh './mvnw clean package -DskipTests'
+                sh 'mvn clean install -DskipTests'
             }
         }
 
