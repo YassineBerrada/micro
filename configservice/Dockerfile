@@ -1,5 +1,11 @@
-FROM openjdk:8-jdk-alpine
-VOLUME /tmp
-ADD target/configservice-0.0.1-SNAPSHOT.jar app.jar
-ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap  -XX:MaxRAMFraction=1 -XshowSettings:vm "
-ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]
+# Étape 1 : image de base légère avec JDK
+FROM openjdk:17-jdk-slim
+
+# Étape 2 : argument pour le .jar (remplacé lors du build si nécessaire)
+ARG JAR_FILE=target/*.jar
+
+# Étape 3 : copie du jar compilé dans l'image
+COPY ${JAR_FILE} app.jar
+
+# Étape 4 : point d’entrée
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,7 +1,11 @@
-FROM tomcat:9.0-jdk17
+# Étape 1 : image de base légère avec JDK
+FROM openjdk:17-jdk-slim
 
-COPY target/vprofile-v2.war /usr/local/tomcat/webapps/vprofile.war
+# Étape 2 : argument pour le .jar (remplacé lors du build si nécessaire)
+ARG JAR_FILE=target/*.jar
 
-EXPOSE 8080
+# Étape 3 : copie du jar compilé dans l'image
+COPY ${JAR_FILE} app.jar
 
-CMD ["catalina.sh", "run"]
+# Étape 4 : point d’entrée
+ENTRYPOINT ["java", "-jar", "app.jar"]
