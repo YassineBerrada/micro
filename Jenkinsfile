@@ -75,7 +75,7 @@ pipeline {
     environment {
         IMAGE_NAME = "vprofile"
         IMAGE_TAG = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
-        NEXUS_DOCKER_REPO = "3.88.248.130:8082"
+        NEXUS_DOCKER_REPO = "13.221.221.112:8082"
         DOCKER_REGISTRY = "${NEXUS_DOCKER_REPO}/${IMAGE_NAME}"
     }
     steps {
