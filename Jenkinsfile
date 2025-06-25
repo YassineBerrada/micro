@@ -70,7 +70,7 @@ pipeline {
         }
         */
 
-        /*
+        
         stage('Docker Build & Push') {
             environment {
                 IMAGE_NAME = "vprofile"
@@ -91,9 +91,9 @@ pipeline {
                 }
             }
         }
-        */
+        
 
-        /*
+        
         stage('Deploy with Ansible') {
             steps {
                 ansiblePlaybook(
@@ -103,7 +103,7 @@ pipeline {
                 )
             }
         }
-        */
+        
     }
 
     post {
