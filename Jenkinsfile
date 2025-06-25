@@ -50,16 +50,15 @@ pipeline {
         }
 
         stage('Sonar Code Analysis') {
-    environment {
-        scannerHome = tool 'sonar6.2'
-    }
-    steps {
-        withSonarQubeEnv('sonarserver') {
-            sh "${scannerHome}/bin/sonar-scanner"
+            environment {
+                scannerHome = tool 'sonar6.2'
+            }
+            steps {
+                withSonarQubeEnv('sonarserver') {
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
         }
-    }
-}
-
 
         /*
         stage('Quality Gate') {
@@ -71,28 +70,30 @@ pipeline {
         }
         */
 
+        /*
         stage('Docker Build & Push') {
-    environment {
-        IMAGE_NAME = "vprofile"
-        IMAGE_TAG = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
-        NEXUS_DOCKER_REPO = "13.221.221.112:8082"
-        DOCKER_REGISTRY = "${NEXUS_DOCKER_REPO}/${IMAGE_NAME}"
-    }
-    steps {
-        script {
-            sh """
-                echo "YassineNexus12**" | docker login $NEXUS_DOCKER_REPO -u admin --password-stdin
-                docker build -t $DOCKER_REGISTRY:$IMAGE_TAG .
-                docker tag $DOCKER_REGISTRY:$IMAGE_TAG $DOCKER_REGISTRY:latest
-                docker push $DOCKER_REGISTRY:$IMAGE_TAG
-                docker push $DOCKER_REGISTRY:latest
-                docker logout $NEXUS_DOCKER_REPO
-            """
+            environment {
+                IMAGE_NAME = "vprofile"
+                IMAGE_TAG = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
+                NEXUS_DOCKER_REPO = "13.221.221.112:8082"
+                DOCKER_REGISTRY = "${NEXUS_DOCKER_REPO}/${IMAGE_NAME}"
+            }
+            steps {
+                script {
+                    sh """
+                        echo "YassineNexus12**" | docker login $NEXUS_DOCKER_REPO -u admin --password-stdin
+                        docker build -t $DOCKER_REGISTRY:$IMAGE_TAG .
+                        docker tag $DOCKER_REGISTRY:$IMAGE_TAG $DOCKER_REGISTRY:latest
+                        docker push $DOCKER_REGISTRY:$IMAGE_TAG
+                        docker push $DOCKER_REGISTRY:latest
+                        docker logout $NEXUS_DOCKER_REPO
+                    """
+                }
+            }
         }
-    }
-}
+        */
 
-
+        /*
         stage('Deploy with Ansible') {
             steps {
                 ansiblePlaybook(
@@ -102,6 +103,7 @@ pipeline {
                 )
             }
         }
+        */
     }
 
     post {
