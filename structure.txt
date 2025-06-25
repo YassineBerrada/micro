@@ -1,0 +1,52 @@
+.
+├── Dockerfile
+├── Jenkinsfile
+├── README.md
+├── ansible
+│   ├── deploy_docker.yml
+│   └── hosts.ini
+├── configservice
+│   ├── Dockerfile
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── pom.xml
+│   └── src
+│       ├── main
+│       └── test
+├── counterservice
+│   ├── Dockerfile
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── pom.xml
+│   └── src
+│       ├── main
+│       └── test
+├── docker-compose.yml
+├── gatewayservice
+│   ├── Dockerfile
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── pom.xml
+│   └── src
+│       ├── main
+│       └── test
+├── pom.xml
+├── registryservice
+│   ├── Dockerfile
+│   ├── mvnw
+│   ├── mvnw.cmd
+│   ├── pom.xml
+│   └── src
+│       ├── main
+│       └── test
+├── runDockerized.sh
+├── sonar-project.properties
+├── structure.txt
+├── template-service
+│   └── Dockerfile
+└── tools
+    ├── architecture.dot
+    ├── createGraph.sh
+    └── file.png
+
+20 directories, 30 files

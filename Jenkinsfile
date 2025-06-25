@@ -13,105 +13,44 @@ pipeline {
     }
 
     environment {
-        MAVEN_OPTS = "--add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
+        IMAGE_TAG = "${BUILD_ID}-${new Date().format('dd-MM-HH-mm')}"
+        NEXUS_DOCKER_REPO = "13.221.221.112:8082"
+        DOCKER_USER = "admin"
+        DOCKER_PASS = "YassineNexus12**"
     }
 
     stages {
-        stage('Fetch code') {
+        stage('Build all microservices') {
             steps {
-                git branch: 'main', url: 'https://github.com/YassineBerrada/micro'
+                sh './mvnw clean package -DskipTests'
             }
         }
 
-        stage('Build') {
-            steps {
-                sh 'mvn install -DskipTests'
-            }
-            post {
-                success {
-                    echo 'Now Archiving it...'
-                    archiveArtifacts artifacts: '**/target/*.jar'
-                }
-            }
-        }
-
-        /*
-        stage('UNIT TEST') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-        */
-
-        stage('Checkstyle Analysis') {
-            steps {
-                sh 'mvn checkstyle:checkstyle'
-            }
-        }
-
-        stage('Sonar Code Analysis') {
-            environment {
-                scannerHome = tool 'sonar6.2'
-            }
-            steps {
-                withSonarQubeEnv('sonarserver') {
-                    sh "${scannerHome}/bin/sonar-scanner"
-                }
-            }
-        }
-
-        /*
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-        */
-
-        
         stage('Docker Build & Push') {
-            environment {
-                IMAGE_NAME = "vprofile"
-                IMAGE_TAG = "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}"
-                NEXUS_DOCKER_REPO = "13.221.221.112:8082"
-                DOCKER_REGISTRY = "${NEXUS_DOCKER_REPO}/${IMAGE_NAME}"
-            }
             steps {
                 script {
-                    sh """
-                        echo "YassineNexus12**" | docker login $NEXUS_DOCKER_REPO -u admin --password-stdin
-                        docker build -t $DOCKER_REGISTRY:$IMAGE_TAG .
-                        docker tag $DOCKER_REGISTRY:$IMAGE_TAG $DOCKER_REGISTRY:latest
-                        docker push $DOCKER_REGISTRY:$IMAGE_TAG
-                        docker push $DOCKER_REGISTRY:latest
-                        docker logout $NEXUS_DOCKER_REPO
-                    """
+                    def services = ['configservice', 'counterservice', 'gatewayservice', 'registryservice']
+                    for (svc in services) {
+                        echo "Processing ${svc}"
+                        sh """
+                            cd ${svc}
+                            docker build -t ${NEXUS_DOCKER_REPO}/${svc}:${IMAGE_TAG} .
+                            docker tag ${NEXUS_DOCKER_REPO}/${svc}:${IMAGE_TAG} ${NEXUS_DOCKER_REPO}/${svc}:latest
+                            echo "${DOCKER_PASS}" | docker login ${NEXUS_DOCKER_REPO} -u ${DOCKER_USER} --password-stdin
+                            docker push ${NEXUS_DOCKER_REPO}/${svc}:${IMAGE_TAG}
+                            docker push ${NEXUS_DOCKER_REPO}/${svc}:latest
+                            docker logout ${NEXUS_DOCKER_REPO}
+                            cd ..
+                        """
+                    }
                 }
             }
         }
-        
-
-        
-        stage('Deploy with Ansible') {
-            steps {
-                ansiblePlaybook(
-                    playbook: 'ansible/deploy_docker.yml',
-                    inventory: 'ansible/hosts.ini',
-                    credentialsId: 'sonarqube3'
-                )
-            }
-        }
-        
     }
 
     post {
         always {
-            echo 'Slack Notifications.'
-            slackSend channel: '#devopscicd',
-                      color: COLOR_MAP[currentBuild.currentResult],
-                      message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}"
+            echo "Pipeline completed with status: ${currentBuild.currentResult}"
         }
     }
 }
