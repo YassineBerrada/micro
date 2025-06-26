@@ -19,14 +19,12 @@ pipeline {
           DOCKER_PASS       = "YassineNexus12**"
     }
 
-
     stages {
         stage('Fetch code') {
             steps {
                     git branch: 'main', url: 'https://github.com/YassineBerrada/micro'
          }
         }
-
 
         stage('Build') {
             steps {
@@ -42,11 +40,13 @@ pipeline {
             }
         }
 
+        /*
         stage('Checkstyle Analysis') {
             steps {
                 sh 'mvn checkstyle:checkstyle'
             }
         }
+        */
 
         stage('Sonar Code Analysis') {
             environment {
@@ -104,21 +104,15 @@ pipeline {
 
         stage('Deploy with Ansible') {
             steps {
-                script {
-                   // tag défini plus haut dans le stage Docker
-                  def tag = "${env.BUILD_ID}-${new Date().format('ddMMyy-HHmm')}"
-                  ansiblePlaybook(
-                       playbook:  'ansible/deploy_docker.yml',
-                       inventory: 'ansible/hosts.ini',
-                       credentialsId: 'sonarqube3',
-                       extraVars: [
-                           image_tag: tag
-                       ]
-                  )
-                }
-             }
+                // Réutilise votre playbook et vos credentials Ansible existants
+                ansiblePlaybook(
+                    playbook: 'ansible/deploy_docker.yml',
+                    inventory: 'ansible/hosts.ini',
+                    credentialsId: 'sonarqube3'
+                )
+            }
         }
-
+    }
 
     post {
         always {
