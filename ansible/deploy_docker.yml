@@ -4,51 +4,50 @@
   become: yes
 
   vars:
-    # on peut aussi passer nexus_* depuis Jenkins en extraVars
     nexus_registry: "34.238.246.157:8082"
     nexus_username: "admin"
     nexus_password: "YassineNexus12**"
-
-    # liste de services à déployer
     services:
       - configservice
       - counterservice
       - registryservice
       - gatewayservice
-
-    # ports exposés par chaque service (ajustez selon votre config)
     service_ports:
       configservice: 8888
       counterservice: 9000
       registryservice: 8761
       gatewayservice: 8080
-
-    # tag à déployer — on le transmet depuis Jenkins (extraVar)
     image_tag: "{{ image_tag | default('latest') }}"
 
   tasks:
     - name: Authenticate to Nexus Docker registry
       shell: |
         echo "{{ nexus_password }}" \
-        | docker login {{ nexus_registry }} \
-            -u {{ nexus_username }} --password-stdin
+        | docker login {{ nexus_registry }} -u {{ nexus_username }} --password-stdin
 
-    - name: Pull, stop, remove & run each microservice
+    - name: Pull image for each microservice
+      shell: docker pull {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
       loop: "{{ services }}"
       loop_control:
         loop_var: svc
-      block:
-        - name: Pull image for {{ svc }}
-          shell: docker pull {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
 
-        - name: Stop existing {{ svc }}
-          shell: docker stop {{ svc }} || true
+    - name: Stop existing container for each microservice
+      shell: docker stop {{ svc }} || true
+      loop: "{{ services }}"
+      loop_control:
+        loop_var: svc
 
-        - name: Remove existing {{ svc }}
-          shell: docker rm {{ svc }} || true
+    - name: Remove existing container for each microservice
+      shell: docker rm {{ svc }} || true
+      loop: "{{ services }}"
+      loop_control:
+        loop_var: svc
 
-        - name: Run {{ svc }} on port {{ service_ports[svc] }}
-          shell: |
-            docker run -d --name {{ svc }} \
-              -p {{ service_ports[svc] }}:{{ service_ports[svc] }} \
-              {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
+    - name: Run container for each microservice
+      shell: |
+        docker run -d --name {{ svc }} \
+          -p {{ service_ports[svc] }}:{{ service_ports[svc] }} \
+          {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
+      loop: "{{ services }}"
+      loop_control:
+        loop_var: svc
