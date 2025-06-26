@@ -6,7 +6,7 @@
   vars:
     image_name: "vprofile"
     image_tag: "latest"
-    nexus_registry: "13.221.221.112:8082"
+    nexus_registry: "34.238.246.157:8082"
     nexus_username: "admin"
     nexus_password: "YassineNexus12**"
 

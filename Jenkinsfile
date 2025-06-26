@@ -14,7 +14,7 @@ pipeline {
 
     environment {
         IMAGE_TAG = "${BUILD_ID}-${new Date().format('dd-MM-HH-mm')}"
-        NEXUS_DOCKER_REPO = "13.221.221.112:8082"
+        NEXUS_DOCKER_REPO = " 34.238.246.157:8082"
         DOCKER_USER = "admin"
         DOCKER_PASS = "YassineNexus12**"
     }
