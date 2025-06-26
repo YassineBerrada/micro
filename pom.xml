@@ -85,7 +85,7 @@
         </dependency>
     </dependencies>
 
-    <build>
+<build>
     <plugins>
         <plugin>
             <groupId>org.springframework.boot</groupId>
@@ -114,6 +114,52 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>3.1.2</version>
         </plugin>
+        <pluginManagement>
+    <plugins>
+      <!-- Jacoco pour la couverture -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.10</version>
+        <executions>
+          <!-- Prépare l’agent avant les tests -->
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <!-- Génère le rapport après les tests -->
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Checkstyle pour le style de code -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.2.2</version>
+        <executions>
+          <execution>
+            <id>checkstyle</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>checkstyle</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <!-- pas de configLocation = règle par défaut de Checkstyle -->
+          <failsOnError>true</failsOnError>
+          <outputFileFormat>xml</outputFileFormat>
+          <outputFile>target/checkstyle-result.xml</outputFile>
+        </configuration>
+      </plugin>
     </plugins>
 </build>
 

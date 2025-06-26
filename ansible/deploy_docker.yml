@@ -1,29 +1,54 @@
 ---
-- name: Deploy Docker container from Nexus
-  hosts: sonar
+- name: Deploy all microservices from Nexus
+  hosts: microservices
   become: yes
 
   vars:
-    image_name: "vprofile"
-    image_tag: "latest"
+    # on peut aussi passer nexus_* depuis Jenkins en extraVars
     nexus_registry: "34.238.246.157:8082"
     nexus_username: "admin"
     nexus_password: "YassineNexus12**"
 
+    # liste de services à déployer
+    services:
+      - configservice
+      - counterservice
+      - registryservice
+      - gatewayservice
+
+    # ports exposés par chaque service (ajustez selon votre config)
+    service_ports:
+      configservice: 8888
+      counterservice: 9000
+      registryservice: 8761
+      gatewayservice: 8080
+
+    # tag à déployer — on le transmet depuis Jenkins (extraVar)
+    image_tag: "{{ image_tag | default('latest') }}"
+
   tasks:
     - name: Authenticate to Nexus Docker registry
-      shell: echo "{{ nexus_password }}" | docker login {{ nexus_registry }} -u {{ nexus_username }} --password-stdin
-
-    - name: Pull Docker image from Nexus
-      shell: docker pull {{ nexus_registry }}/{{ image_name }}:{{ image_tag }}
-
-    - name: Stop running container if exists
-      shell: docker stop {{ image_name }} || true
-
-    - name: Remove existing container if exists
-      shell: docker rm {{ image_name }} || true
-
-    - name: Run Docker container
       shell: |
-        docker run -d --name {{ image_name }} -p 8080:8080 \
-        {{ nexus_registry }}/{{ image_name }}:{{ image_tag }}
+        echo "{{ nexus_password }}" \
+        | docker login {{ nexus_registry }} \
+            -u {{ nexus_username }} --password-stdin
+
+    - name: Pull, stop, remove & run each microservice
+      loop: "{{ services }}"
+      loop_control:
+        loop_var: svc
+      block:
+        - name: Pull image for {{ svc }}
+          shell: docker pull {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
+
+        - name: Stop existing {{ svc }}
+          shell: docker stop {{ svc }} || true
+
+        - name: Remove existing {{ svc }}
+          shell: docker rm {{ svc }} || true
+
+        - name: Run {{ svc }} on port {{ service_ports[svc] }}
+          shell: |
+            docker run -d --name {{ svc }} \
+              -p {{ service_ports[svc] }}:{{ service_ports[svc] }} \
+              {{ nexus_registry }}/{{ svc }}:{{ image_tag }}
